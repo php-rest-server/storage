@@ -68,9 +68,7 @@ abstract class StorageModel implements StorageModelInterface
                     break;
 
                 case self::FIELD_TYPE_ARRAY:
-                    if (!is_array($val)) {
-                        $val = json_decode($val, true);
-                    }
+                    $val = json_encode($val);
                     break;
 
                 case self::FIELD_TYPE_STRING:
@@ -89,6 +87,7 @@ abstract class StorageModel implements StorageModelInterface
                 $this->{$this->getPrimaryKey()} = $newId;
             }
         } else {
+            // todo: only changed fields
             $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
         }
     }
@@ -120,7 +119,9 @@ abstract class StorageModel implements StorageModelInterface
                     break;
 
                 case self::FIELD_TYPE_ARRAY:
-                    $val = json_decode($val, true);
+                    if (!is_array($val)) {
+                        $val = json_decode($val, true);
+                    }
                     break;
 
                 case self::FIELD_TYPE_STRING:
