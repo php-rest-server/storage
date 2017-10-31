@@ -135,4 +135,20 @@ abstract class StorageModel implements StorageModelInterface
         }
         return $this;
     }
+
+
+    /**
+     * Get only safe fields
+     *
+     * @return array
+     */
+    public function getSafe()
+    {
+        $fields = $this->getPublicFields();
+        $result = [];
+        foreach ($fields as $field) {
+            $result[$field] = $this->$field;
+        }
+        return $result;
+    }
 }

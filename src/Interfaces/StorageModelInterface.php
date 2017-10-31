@@ -40,6 +40,14 @@ interface StorageModelInterface
 
 
     /**
+     * Get list of public fields
+     *
+     * @return array
+     */
+    public function getPublicFields();
+
+
+    /**
      * Return table / collection name for model
      * @return string
      */
