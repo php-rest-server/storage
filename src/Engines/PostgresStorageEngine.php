@@ -6,9 +6,13 @@
 namespace RestCore\Storage\Engines;
 
 use RestCore\Core\General\Param;
+use RestCore\Storage\Exceptions\StorageException;
 
 class PostgresStorageEngine extends StorageEngine
 {
+    /**
+     * @var \PDO
+     */
     private $connection;
 
 
@@ -40,9 +44,8 @@ class PostgresStorageEngine extends StorageEngine
      */
     public function find(array $params, $table, $limit = 100)
     {
-        $keys = array_keys($params);
         $statement = $this->connection->prepare(
-            'SELECT * FROM ' . $table . ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';'
+            'SELECT * FROM "' . $table . '" WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';'
         );
         $statement->execute($params);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -64,22 +67,49 @@ class PostgresStorageEngine extends StorageEngine
 
     /**
      * @inheritdoc
+     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function add(array $data, $table)
     {
-        $columns = implode(',', array_keys($data));
-        $values = implode(',', array_fill(0, count($data), '?'));
-        $statement = $this->connection->prepare('INSERT INTO ' . $table . ' (' . $columns . ') VALUES (' . $values . ');');
-        return $statement->execute($data);
+        $data = array_filter($data, function ($var) {
+            return null !== $var;
+        });
+        $columns = implode('", "', array_keys($data));
+        $values = implode(', ', array_fill(0, count($data), '?'));
+        $statement =
+            $this->connection->prepare('INSERT INTO "' . $table . '" ("' . $columns . '") VALUES (' . $values . ');');
+        if ($statement->execute(array_values($data))) {
+            return $statement->lastInsertId();
+        }
+
+        $error = $statement->errorInfo();
+        throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
 
     /**
      * @inheritdoc
+     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function update(array $params, array $data, $table, $limit = 100)
     {
-        // TODO: Implement update() method.
+        $dataFields = [];
+        $dataValues = [];
+        foreach ($data as $field => $value) {
+            $dataFields[] = '"' . $field . '" = :data_' . $field;
+            $dataValues['data_' . $field] = $value;
+        }
+        $statement = $this->connection->prepare('UPDATE "' . $table . '" SET ' . implode(', ', $dataFields) .
+            ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';');
+        if ($statement->execute(array_merge($dataValues, $params))) {
+            return true;
+        }
+
+        $error = $statement->errorInfo();
+        if ($error[0] !== '00000') {
+            throw new StorageException($error[0] . ': ' . $error[2]);
+        }
+        return false;
     }
 
 
@@ -91,7 +121,7 @@ class PostgresStorageEngine extends StorageEngine
     {
         // TODO: доделать более умный where
         array_walk($params, function (&$item, $key) {
-            $item = $key . ' = :' . $key;
+            $item = '"' . $key . '" = :' . $key;
         });
         return implode(' AND ', $params);
     }

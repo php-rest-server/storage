@@ -55,9 +55,12 @@ abstract class StorageModel implements StorageModelInterface
             $data[$field] = $this->$field;
         }
         if ($this->isNew) {
-            $this->getStorageEngine()->add($data, $this->getTableName());
+            $newId = $this->getStorageEngine()->add($data, $this->getTableName());
+            if ($newId > 0) {
+                $this->{$this->getPrimaryKey()} = $newId;
+            }
         } else {
-            $this->getStorageEngine()->update($this->params, $data, $this->getTableName());
+            $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
         }
     }
 

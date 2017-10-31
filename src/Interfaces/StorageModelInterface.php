@@ -28,4 +28,11 @@ interface StorageModelInterface
      * @return string
      */
     public function getTableName();
+
+
+    /**
+     * Return primary key
+     * @return string
+     */
+    public function getPrimaryKey();
 }
