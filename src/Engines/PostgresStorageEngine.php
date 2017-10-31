@@ -41,9 +41,8 @@ class PostgresStorageEngine extends StorageEngine
     public function find(array $params, $table, $limit = 100)
     {
         $keys = array_keys($params);
-        // TODO: доделать поиск
         $statement = $this->connection->prepare(
-            'SELECT * FROM ' . $table . ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit
+            'SELECT * FROM ' . $table . ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';'
         );
         $statement->execute($params);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -56,7 +55,7 @@ class PostgresStorageEngine extends StorageEngine
     public function findOne(array $params, $table)
     {
         $result = $this->find($params, $table, 1);
-        if (is_array($result)) {
+        if (is_array($result) && !empty($result)) {
             return $result[0];
         }
         return false;
@@ -68,7 +67,10 @@ class PostgresStorageEngine extends StorageEngine
      */
     public function add(array $data, $table)
     {
-        // TODO: Implement add() method.
+        $columns = implode(',', array_keys($data));
+        $values = implode(',', array_fill(0, count($data), '?'));
+        $statement = $this->connection->prepare('INSERT INTO ' . $table . ' (' . $columns . ') VALUES (' . $values . ');');
+        return $statement->execute($data);
     }
 
 
@@ -87,8 +89,9 @@ class PostgresStorageEngine extends StorageEngine
      */
     protected function composerWhere(array $params)
     {
-        array_walk($params, function ($item, $key) {
-            return $key . '= :' . $item;
+        // TODO: доделать более умный where
+        array_walk($params, function (&$item, $key) {
+            $item = $key . ' = :' . $key;
         });
         return implode(' AND ', $params);
     }
