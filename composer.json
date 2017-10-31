@@ -1,0 +1,20 @@
+{
+    "name": "php-rest-server/storage",
+    "description": "Storage Engine for PHP-REST-Server",
+    "type": "library",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Artem Kaplenko",
+            "email": "art.kaplenko@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "RestCore\\Storage\\": "src/",
+            "RestCore\\Storage\\tests\\": "tests/"
+        }
+    }
+}

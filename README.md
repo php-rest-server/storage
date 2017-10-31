@@ -1,2 +1,2 @@
-# storages
-storages engines for server
+# storage
+storage engines for server
