@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * TODO: transactions
  */
 
 namespace RestCore\Storage\Engines;
@@ -100,7 +100,7 @@ class PostgresStorageEngine extends StorageEngine
             $dataValues['data_' . $field] = $value;
         }
         $statement = $this->connection->prepare('UPDATE "' . $table . '" SET ' . implode(', ', $dataFields) .
-            ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';');
+            ' WHERE ' . $this->composerWhere($params) . ' /*LIMIT ' . $limit . '*/;');
         if ($statement->execute(array_merge($dataValues, $params))) {
             return true;
         }
@@ -119,7 +119,7 @@ class PostgresStorageEngine extends StorageEngine
      */
     protected function composerWhere(array $params)
     {
-        // TODO: доделать более умный where
+        // TODO: make smart where
         array_walk($params, function (&$item, $key) {
             $item = '"' . $key . '" = :' . $key;
         });
