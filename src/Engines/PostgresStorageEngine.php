@@ -79,7 +79,7 @@ class PostgresStorageEngine extends StorageEngine
         $statement =
             $this->connection->prepare('INSERT INTO "' . $table . '" ("' . $columns . '") VALUES (' . $values . ');');
         if ($statement->execute(array_values($data))) {
-            return $statement->lastInsertId();
+            return $this->connection->lastInsertId();
         }
 
         $error = $statement->errorInfo();

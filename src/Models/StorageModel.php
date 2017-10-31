@@ -60,7 +60,7 @@ abstract class StorageModel implements StorageModelInterface
                     break;
 
                 case self::FIELD_TYPE_BOOL:
-                    $val = (bool)$val;
+                    $val = (int)(bool)$val;
                     break;
 
                 case self::FIELD_TYPE_FLOAT:
@@ -69,7 +69,7 @@ abstract class StorageModel implements StorageModelInterface
 
                 case self::FIELD_TYPE_ARRAY:
                     if (!is_array($val)) {
-                        $val = json_encode($val);
+                        $val = json_decode($val, true);
                     }
                     break;
 
