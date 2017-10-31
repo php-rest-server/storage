@@ -7,6 +7,14 @@ namespace RestCore\Storage\Interfaces;
 
 interface StorageModelInterface
 {
+    const FIELD_TYPE_INT = 'integer';
+    const FIELD_TYPE_STRING = 'string';
+    const FIELD_TYPE_PK = 'pk';
+    const FIELD_TYPE_ARRAY = 'array';
+    const FIELD_TYPE_BOOL = 'boolean';
+    const FIELD_TYPE_FLOAT = 'float';
+
+
     /**
      * Get storage engine which used for this model
      *
@@ -21,6 +29,14 @@ interface StorageModelInterface
      * @return array
      */
     public function getFields();
+
+
+    /**
+     * Return field types
+     *
+     * @return array
+     */
+    public function getFieldTypes();
 
 
     /**

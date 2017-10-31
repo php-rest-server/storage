@@ -50,9 +50,36 @@ abstract class StorageModel implements StorageModelInterface
     public function save()
     {
         $fields = array_keys($this->getFields());
+        $fieldTypes = $this->getFieldTypes();
         $data = [];
         foreach ($fields as $field) {
-            $data[$field] = $this->$field;
+            $val = $this->$field;
+            switch ($fieldTypes[$field]) {
+                case self::FIELD_TYPE_INT:
+                    $val = (int)$val;
+                    break;
+
+                case self::FIELD_TYPE_BOOL:
+                    $val = (bool)$val;
+                    break;
+
+                case self::FIELD_TYPE_FLOAT:
+                    $val = (float)$val;
+                    break;
+
+                case self::FIELD_TYPE_ARRAY:
+                    $val = json_encode($val);
+                    break;
+
+                case self::FIELD_TYPE_STRING:
+                    $val = (string)$val;
+                    break;
+
+                case self::FIELD_TYPE_PK:
+                default:
+                    break;
+            }
+            $data[$field] = $val;
         }
         if ($this->isNew) {
             $newId = $this->getStorageEngine()->add($data, $this->getTableName());
@@ -74,8 +101,34 @@ abstract class StorageModel implements StorageModelInterface
     public function load(array $data)
     {
         $fields = array_merge($this->getFields(), $data);
+        $fieldTypes = $this->getFieldTypes();
 
         foreach ($fields as $name => $val) {
+            switch ($fieldTypes[$name]) {
+                case self::FIELD_TYPE_INT:
+                    $val = (int)$val;
+                    break;
+
+                case self::FIELD_TYPE_BOOL:
+                    $val = (bool)$val;
+                    break;
+
+                case self::FIELD_TYPE_FLOAT:
+                    $val = (float)$val;
+                    break;
+
+                case self::FIELD_TYPE_ARRAY:
+                    $val = json_decode($val, true);
+                    break;
+
+                case self::FIELD_TYPE_STRING:
+                    $val = (string)$val;
+                    break;
+
+                case self::FIELD_TYPE_PK:
+                default:
+                    break;
+            }
             $this->$name = $val;
         }
         return $this;
