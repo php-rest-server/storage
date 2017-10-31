@@ -17,9 +17,15 @@ abstract class StorageModel implements StorageModelInterface
 
     /**
      * This array stores search parameters, in case you need to update
-     * @var
+     * @var array
      */
     protected $params = [];
+
+    /**
+     * Store for old fields values
+     * @var array
+     */
+    protected $oldFields = [];
 
 
     /**
@@ -46,6 +52,7 @@ abstract class StorageModel implements StorageModelInterface
 
     /**
      * Save model or update
+     * @return boolean
      */
     public function save()
     {
@@ -54,6 +61,10 @@ abstract class StorageModel implements StorageModelInterface
         $data = [];
         foreach ($fields as $field) {
             $val = $this->$field;
+            // continue if field not changed
+            if ($val === $this->oldFields[$field]) {
+                continue;
+            }
             switch ($fieldTypes[$field]) {
                 case self::FIELD_TYPE_INT:
                     $val = (int)$val;
@@ -81,15 +92,19 @@ abstract class StorageModel implements StorageModelInterface
             }
             $data[$field] = $val;
         }
+        if (empty($data)) {
+            return true;
+        }
         if ($this->isNew) {
             $newId = $this->getStorageEngine()->add($data, $this->getTableName());
             if ($newId > 0) {
                 $this->{$this->getPrimaryKey()} = $newId;
+                return true;
             }
-        } else {
-            // todo: only changed fields
-            $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
+            return false;
         }
+
+        return $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
     }
 
 
@@ -132,6 +147,7 @@ abstract class StorageModel implements StorageModelInterface
                 default:
                     break;
             }
+            $this->oldFields[$name] = $val;
             $this->$name = $val;
         }
         return $this;
