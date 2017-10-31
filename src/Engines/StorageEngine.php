@@ -3,14 +3,24 @@
  *
  */
 
-namespace RestCore\Storages\Engines;
+namespace RestCore\Storage\Engines;
 
-use RestCore\Storages\Interfaces\StorageEngineInterface;
+use RestCore\Storage\Interfaces\StorageEngineInterface;
+use RestCore\Storage\Storage;
 
-class StorageEngine implements StorageEngineInterface
+abstract class StorageEngine implements StorageEngineInterface
 {
     private static $instance;
 
+    abstract protected function connect($config);
+
+    abstract protected function getStorageName();
+
+    public function __construct()
+    {
+        $config = Storage::getConfig();
+        $this->connect(isset($config[$this->getStorageName()]) ? $config[$this->getStorageName()] : [] );
+    }
 
     /**
      * @inheritdoc

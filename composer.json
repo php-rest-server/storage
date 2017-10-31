@@ -9,8 +9,16 @@
             "email": "art.kaplenko@gmail.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "https://github.com/php-rest-server/core.git"
+        }
+    ],
     "minimum-stability": "dev",
-    "require": {},
+    "require": {
+        "php-rest-server/core": "*"
+    },
     "autoload": {
         "psr-4": {
             "RestCore\\Storage\\": "src/",

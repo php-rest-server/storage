@@ -3,9 +3,9 @@
  *
  */
 
-namespace RestCore\Storages\Models;
+namespace RestCore\Storage\Models;
 
-use RestCore\Storages\Engines\PostgresStorageEngine;
+use RestCore\Storage\Engines\PostgresStorageEngine;
 
 abstract class PostgresModel extends StorageModel
 {
