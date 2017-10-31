@@ -68,7 +68,9 @@ abstract class StorageModel implements StorageModelInterface
                     break;
 
                 case self::FIELD_TYPE_ARRAY:
-                    $val = json_encode($val);
+                    if (!is_array($val)) {
+                        $val = json_encode($val);
+                    }
                     break;
 
                 case self::FIELD_TYPE_STRING:
