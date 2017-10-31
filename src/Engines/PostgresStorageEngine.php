@@ -11,6 +11,7 @@ class PostgresStorageEngine extends StorageEngine
 {
     private $connection;
 
+
     /**
      * @inheritdoc
      */
@@ -19,6 +20,7 @@ class PostgresStorageEngine extends StorageEngine
         return 'postgres';
     }
 
+
     /**
      * @inheritdoc
      */
@@ -26,27 +28,40 @@ class PostgresStorageEngine extends StorageEngine
     {
         $config = new Param($config);
         $this->connection = new \PDO(
-            $config->get('dsn', 'pgsql:localhost'),
+            $config->get('dsn', 'pgsql:host=localhost'),
             $config->get('username', 'postgres'),
             $config->get('password', '')
         );
     }
 
+
     /**
      * @inheritdoc
      */
-    public function find(array $params, $table)
+    public function find(array $params, $table, $limit = 100)
     {
-        //$this
+        $keys = array_keys($params);
+        // TODO: доделать поиск
+        $statement = $this->connection->prepare(
+            'SELECT * FROM ' . $table . ' WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit
+        );
+        $statement->execute($params);
+        return $statement->fetchAll(\PDO::FETCH_ASSOC);
     }
+
 
     /**
      * @inheritdoc
      */
     public function findOne(array $params, $table)
     {
-        // TODO: Implement findOne() method.
+        $result = $this->find($params, $table, 1);
+        if (is_array($result)) {
+            return $result[0];
+        }
+        return false;
     }
+
 
     /**
      * @inheritdoc
@@ -56,12 +71,25 @@ class PostgresStorageEngine extends StorageEngine
         // TODO: Implement add() method.
     }
 
+
     /**
      * @inheritdoc
      */
-    public function update(array $params, array $data, $table)
+    public function update(array $params, array $data, $table, $limit = 100)
     {
         // TODO: Implement update() method.
     }
 
+
+    /**
+     * @param array $params
+     * @return string
+     */
+    protected function composerWhere(array $params)
+    {
+        array_walk($params, function ($item, $key) {
+            return $key . '= :' . $item;
+        });
+        return implode(' AND ', $params);
+    }
 }

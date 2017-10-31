@@ -36,8 +36,11 @@ abstract class StorageModel implements StorageModelInterface
                 $this->load($data);
                 $this->isNew = false;
                 $this->params = $params;
+                return;
             }
         }
+
+        $this->load([]);
     }
 
 

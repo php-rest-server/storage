@@ -17,9 +17,10 @@ interface StorageEngineInterface
     /**
      * @param array $params
      * @param string $table
+     * @param int $limit
      * @return \array[]
      */
-    public function find(array $params, $table);
+    public function find(array $params, $table, $limit = 100);
 
 
     /**
@@ -42,7 +43,8 @@ interface StorageEngineInterface
      * @param array $params
      * @param array $data
      * @param string $table
+     * @param int $limit
      * @return bool
      */
-    public function update(array $params, array $data, $table);
+    public function update(array $params, array $data, $table, $limit = 100);
 }
