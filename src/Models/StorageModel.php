@@ -5,6 +5,7 @@
 
 namespace RestCore\Storage\Models;
 
+use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
 
 abstract class StorageModel implements StorageModelInterface
@@ -96,10 +97,19 @@ abstract class StorageModel implements StorageModelInterface
             return true;
         }
         if ($this->isNew) {
-            $newId = $this->getStorageEngine()->add($data, $this->getTableName());
-            if ($newId > 0) {
-                $this->{$this->getPrimaryKey()} = $newId;
-                return true;
+            try {
+                $newId = $this->getStorageEngine()->add($data, $this->getTableName());
+                if ($newId > 0) {
+                    $this->{$this->getPrimaryKey()} = $newId;
+                    return true;
+                }
+            } catch (StorageException $e) {
+                // todo: debug mode
+                // TODO: autocreate fields/tables on debug
+                if ($e->getCode() === '42P01') {
+                   $this->getStorageEngine()->createTable($this->getTableName(), $this->getFieldTypes());
+                   return $this->save();
+                }
             }
             return false;
         }

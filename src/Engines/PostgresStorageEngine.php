@@ -7,6 +7,7 @@ namespace RestCore\Storage\Engines;
 
 use RestCore\Core\General\Param;
 use RestCore\Storage\Exceptions\StorageException;
+use RestCore\Storage\Interfaces\StorageModelInterface;
 
 class PostgresStorageEngine extends StorageEngine
 {
@@ -80,6 +81,60 @@ class PostgresStorageEngine extends StorageEngine
             $this->connection->prepare('INSERT INTO "' . $table . '" ("' . $columns . '") VALUES (' . $values . ');');
         if ($statement->execute(array_values($data))) {
             return $this->connection->lastInsertId();
+        }
+
+        $error = $statement->errorInfo();
+        throw new StorageException($error[0] . ': ' . $error[2]);
+    }
+
+
+    /**
+     * @inheritdoc
+     * @throws \RestCore\Storage\Exceptions\StorageException
+     */
+    public function createTable($name, array $fields)
+    {
+        $fieldRecord = [];
+
+        foreach ($fields as $field => $type) {
+            $record = '"' . $field . '" ';
+            switch ($type) {
+                case StorageModelInterface::FIELD_TYPE_PK:
+                    $record .= 'serial';
+                    break;
+
+                case StorageModelInterface::FIELD_TYPE_INT:
+                    $record .= 'integer';
+                    break;
+
+                case StorageModelInterface::FIELD_TYPE_ARRAY:
+                    $record .= 'json';
+                    break;
+
+                case StorageModelInterface::FIELD_TYPE_FLOAT:
+                    $record .= 'double precision';
+                    break;
+
+                case StorageModelInterface::FIELD_TYPE_BOOL:
+                    $record .= 'boolean';
+                    break;
+
+                case StorageModelInterface::FIELD_TYPE_STRING:
+                default:
+                    $record .= 'text';
+                    break;
+            }
+            $fieldRecord[] = $record;
+        }
+
+        $fieldRecord = implode(',', $fieldRecord);
+
+        $statement =
+            $this->connection->query('CREATE TABLE "' . $name . '" (' . $fieldRecord . ');');
+
+
+        if ((int)$statement->errorCode() === 0) {
+            return true;
         }
 
         $error = $statement->errorInfo();

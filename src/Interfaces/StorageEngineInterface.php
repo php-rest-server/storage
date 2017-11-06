@@ -47,4 +47,12 @@ interface StorageEngineInterface
      * @return bool
      */
     public function update(array $params, array $data, $table, $limit = 100);
+
+
+    /**
+     * @param string $name
+     * @param array $fields
+     * @return mixed
+     */
+    public function createTable($name, array $fields);
 }
