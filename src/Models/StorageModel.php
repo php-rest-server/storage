@@ -66,7 +66,7 @@ abstract class StorageModel implements StorageModelInterface
         foreach ($fields as $field) {
             $val = $this->$field;
             // continue if field not changed
-            if ($val === $this->oldFields[$field]) {
+            if (!$this->isNew && $val === $this->oldFields[$field]) {
                 continue;
             }
             switch ($fieldTypes[$field]) {
