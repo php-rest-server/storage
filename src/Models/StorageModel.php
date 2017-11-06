@@ -124,7 +124,7 @@ abstract class StorageModel implements StorageModelInterface
                 $this->getStorageEngine()->createColumn(
                     $this->getTableName(),
                     $columns[1],
-                    $this->getFieldTypes()[$columns]
+                    $this->getFieldTypes()[$columns[1]]
                 );
                 return $this->save();
             }
