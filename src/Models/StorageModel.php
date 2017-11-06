@@ -5,6 +5,7 @@
 
 namespace RestCore\Storage\Models;
 
+use RestCore\Storage\Exceptions\ColumnNotFoundException;
 use RestCore\Storage\Exceptions\SchemaNotFoundException;
 use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
@@ -55,6 +56,7 @@ abstract class StorageModel implements StorageModelInterface
     /**
      * Save model or update
      * @return boolean
+     * @throws \RestCore\Storage\Exceptions\ColumnNotFoundException
      */
     public function save()
     {
@@ -107,13 +109,27 @@ abstract class StorageModel implements StorageModelInterface
             } catch (SchemaNotFoundException $e) {
                 // todo: debug mode
                 // TODO: autocreate fields/tables on debug
-                $this->getStorageEngine()->createTable($this->getTableName(), $this->getFieldTypes());
+                $this->getStorageEngine()->createSchema($this->getTableName(), $this->getFieldTypes());
                 return $this->save();
             }
             return false;
         }
 
-        return $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
+        try {
+            return $this->getStorageEngine()->update($this->params, $data, $this->getTableName() , 1);
+        } catch (ColumnNotFoundException $e) {
+            // todo: debug mode
+            // TODO: autocreate fields/tables on debug
+            if (preg_match('/column "([^"]*)" does not exist/', $e->getMessage(), $columns)) {
+                $this->getStorageEngine()->createColumn(
+                    $this->getTableName(),
+                    $columns[1],
+                    $this->getFieldTypes()[$columns]
+                );
+                return $this->save();
+            }
+            throw $e;
+        }
     }
 
 

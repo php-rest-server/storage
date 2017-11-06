@@ -52,7 +52,16 @@ interface StorageEngineInterface
     /**
      * @param string $schema
      * @param array $fields
-     * @return mixed
+     * @return bool
      */
-    public function createTable($schema, array $fields);
+    public function createSchema($schema, array $fields);
+
+
+    /**
+     * @param string $schema
+     * @param string $column
+     * @param string $type
+     * @return bool
+     */
+    public function createColumn($schema, $column, $type);
 }

@@ -6,6 +6,7 @@
 namespace RestCore\Storage\Engines;
 
 use RestCore\Core\General\Param;
+use RestCore\Storage\Exceptions\ColumnNotFoundException;
 use RestCore\Storage\Exceptions\SchemaNotFoundException;
 use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
@@ -98,7 +99,7 @@ class PostgresStorageEngine extends StorageEngine
      * @inheritdoc
      * @throws \RestCore\Storage\Exceptions\StorageException
      */
-    public function createTable($schema, array $fields)
+    public function createSchema($schema, array $fields)
     {
         $fieldRecord = [];
 
@@ -106,7 +107,7 @@ class PostgresStorageEngine extends StorageEngine
             $record = '"' . $field . '" ';
             switch ($type) {
                 case StorageModelInterface::FIELD_TYPE_PK:
-                    $record .= 'serial';
+                    $record .= 'serial PRIMARY KEY';
                     break;
 
                 case StorageModelInterface::FIELD_TYPE_INT:
@@ -166,6 +167,9 @@ class PostgresStorageEngine extends StorageEngine
 
         $error = $statement->errorInfo();
         if ($error[0] !== '00000') {
+            if ($error[0] === '42703') {
+                throw new ColumnNotFoundException($error[0] . ': ' . $error[2]);
+            }
             throw new StorageException($error[0] . ': ' . $error[2]);
         }
         return false;
@@ -183,5 +187,49 @@ class PostgresStorageEngine extends StorageEngine
             $item = '"' . $key . '" = :' . $key;
         });
         return implode(' AND ', $params);
+    }
+
+    /**
+     * @inheritdoc
+     * @throws \RestCore\Storage\Exceptions\StorageException
+     */
+    public function createColumn($schema, $column, $type)
+    {
+        switch ($type) {
+            case StorageModelInterface::FIELD_TYPE_PK:
+                $record = 'serial PRIMARY KEY';
+                break;
+
+            case StorageModelInterface::FIELD_TYPE_INT:
+                $record = 'integer';
+                break;
+
+            case StorageModelInterface::FIELD_TYPE_ARRAY:
+                $record = 'json';
+                break;
+
+            case StorageModelInterface::FIELD_TYPE_FLOAT:
+                $record = 'double precision';
+                break;
+
+            case StorageModelInterface::FIELD_TYPE_BOOL:
+                $record = 'boolean';
+                break;
+
+            case StorageModelInterface::FIELD_TYPE_STRING:
+            default:
+                $record = 'text';
+                break;
+        }
+
+        $statement =
+            $this->connection->query('ALTER TABLE "' . $schema . '" ADD COLUMN "' . $column . '" ' . $record . ';');
+
+        if ((int)$statement->errorCode() === 0) {
+            return true;
+        }
+
+        $error = $statement->errorInfo();
+        throw new StorageException($error[0] . ': ' . $error[2]);
     }
 }
