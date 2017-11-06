@@ -138,7 +138,7 @@ class PostgresStorageEngine extends StorageEngine
 
         $statement = $this->connection->query('CREATE TABLE "' . $schema . '" (' . $fieldRecord . ');');
 
-        if ((int)$statement->errorCode() === 0) {
+        if ($statement) {
             return true;
         }
 
@@ -225,7 +225,7 @@ class PostgresStorageEngine extends StorageEngine
         $statement =
             $this->connection->query('ALTER TABLE "' . $schema . '" ADD COLUMN "' . $column . '" ' . $record . ';');
 
-        if ((int)$statement->errorCode() === 0) {
+        if ($statement) {
             return true;
         }
 
