@@ -120,7 +120,7 @@ abstract class StorageModel implements StorageModelInterface
         } catch (ColumnNotFoundException $e) {
             // todo: debug mode
             // TODO: autocreate fields/tables on debug
-            if (preg_match('/column "([^"]*)" does not exist/', $e->getMessage(), $columns)) {
+            if (preg_match('/column "([^"]*)" /', $e->getMessage(), $columns)) {
                 $this->getStorageEngine()->createColumn(
                     $this->getTableName(),
                     $columns[1],
