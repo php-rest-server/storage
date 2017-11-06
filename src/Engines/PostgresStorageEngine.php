@@ -6,6 +6,7 @@
 namespace RestCore\Storage\Engines;
 
 use RestCore\Core\General\Param;
+use RestCore\Storage\Exceptions\SchemaNotFoundException;
 use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
 
@@ -43,10 +44,10 @@ class PostgresStorageEngine extends StorageEngine
     /**
      * @inheritdoc
      */
-    public function find(array $params, $table, $limit = 100)
+    public function find(array $params, $schema, $limit = 100)
     {
         $statement = $this->connection->prepare(
-            'SELECT * FROM "' . $table . '" WHERE ' . $this->composerWhere($params) . ' LIMIT ' . $limit . ';'
+            'SELECT * FROM "' . $schema . '" WHERE ' . $this->composeWhere($params) . ' LIMIT ' . $limit . ';'
         );
         $statement->execute($params);
         return $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -56,9 +57,9 @@ class PostgresStorageEngine extends StorageEngine
     /**
      * @inheritdoc
      */
-    public function findOne(array $params, $table)
+    public function findOne(array $params, $schema)
     {
-        $result = $this->find($params, $table, 1);
+        $result = $this->find($params, $schema, 1);
         if (is_array($result) && !empty($result)) {
             return $result[0];
         }
@@ -70,7 +71,7 @@ class PostgresStorageEngine extends StorageEngine
      * @inheritdoc
      * @throws \RestCore\Storage\Exceptions\StorageException
      */
-    public function add(array $data, $table)
+    public function add(array $data, $schema)
     {
         $data = array_filter($data, function ($var) {
             return null !== $var;
@@ -78,12 +79,17 @@ class PostgresStorageEngine extends StorageEngine
         $columns = implode('", "', array_keys($data));
         $values = implode(', ', array_fill(0, count($data), '?'));
         $statement =
-            $this->connection->prepare('INSERT INTO "' . $table . '" ("' . $columns . '") VALUES (' . $values . ');');
+            $this->connection->prepare('INSERT INTO "' . $schema . '" ("' . $columns . '") VALUES (' . $values . ');');
         if ($statement->execute(array_values($data))) {
             return $this->connection->lastInsertId();
         }
 
         $error = $statement->errorInfo();
+
+        if ($error[0] === '42P01') {
+            throw new SchemaNotFoundException($error[0] . ': ' . $error[2]);
+        }
+
         throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
@@ -92,7 +98,7 @@ class PostgresStorageEngine extends StorageEngine
      * @inheritdoc
      * @throws \RestCore\Storage\Exceptions\StorageException
      */
-    public function createTable($name, array $fields)
+    public function createTable($schema, array $fields)
     {
         $fieldRecord = [];
 
@@ -129,9 +135,7 @@ class PostgresStorageEngine extends StorageEngine
 
         $fieldRecord = implode(',', $fieldRecord);
 
-        $statement =
-            $this->connection->query('CREATE TABLE "' . $name . '" (' . $fieldRecord . ');');
-
+        $statement = $this->connection->query('CREATE TABLE "' . $schema . '" (' . $fieldRecord . ');');
 
         if ((int)$statement->errorCode() === 0) {
             return true;
@@ -146,7 +150,7 @@ class PostgresStorageEngine extends StorageEngine
      * @inheritdoc
      * @throws \RestCore\Storage\Exceptions\StorageException
      */
-    public function update(array $params, array $data, $table, $limit = 100)
+    public function update(array $params, array $data, $schema, $limit = 100)
     {
         $dataFields = [];
         $dataValues = [];
@@ -154,8 +158,8 @@ class PostgresStorageEngine extends StorageEngine
             $dataFields[] = '"' . $field . '" = :data_' . $field;
             $dataValues['data_' . $field] = $value;
         }
-        $statement = $this->connection->prepare('UPDATE "' . $table . '" SET ' . implode(', ', $dataFields) .
-            ' WHERE ' . $this->composerWhere($params) . ' /*LIMIT ' . $limit . '*/;');
+        $statement = $this->connection->prepare('UPDATE "' . $schema . '" SET ' . implode(', ', $dataFields) .
+            ' WHERE ' . $this->composeWhere($params) . ' /*LIMIT ' . $limit . '*/;');
         if ($statement->execute(array_merge($dataValues, $params))) {
             return true;
         }
@@ -172,7 +176,7 @@ class PostgresStorageEngine extends StorageEngine
      * @param array $params
      * @return string
      */
-    protected function composerWhere(array $params)
+    protected function composeWhere(array $params)
     {
         // TODO: make smart where
         array_walk($params, function (&$item, $key) {

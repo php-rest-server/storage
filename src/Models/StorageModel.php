@@ -5,6 +5,7 @@
 
 namespace RestCore\Storage\Models;
 
+use RestCore\Storage\Exceptions\SchemaNotFoundException;
 use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
 
@@ -103,13 +104,11 @@ abstract class StorageModel implements StorageModelInterface
                     $this->{$this->getPrimaryKey()} = $newId;
                     return true;
                 }
-            } catch (StorageException $e) {
+            } catch (SchemaNotFoundException $e) {
                 // todo: debug mode
                 // TODO: autocreate fields/tables on debug
-                if ($e->getCode() === '42P01') {
-                   $this->getStorageEngine()->createTable($this->getTableName(), $this->getFieldTypes());
-                   return $this->save();
-                }
+                $this->getStorageEngine()->createTable($this->getTableName(), $this->getFieldTypes());
+                return $this->save();
             }
             return false;
         }
