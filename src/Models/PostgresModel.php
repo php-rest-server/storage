@@ -12,7 +12,7 @@ abstract class PostgresModel extends StorageModel
     /**
      * @inheritdoc
      */
-    public function getStorageEngine()
+    public static function getStorageEngine()
     {
         return PostgresStorageEngine::getInstance();
     }

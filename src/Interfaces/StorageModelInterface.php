@@ -20,7 +20,7 @@ interface StorageModelInterface
      *
      * @return StorageEngineInterface
      */
-    public function getStorageEngine();
+    public static function getStorageEngine();
 
 
     /**
@@ -28,7 +28,7 @@ interface StorageModelInterface
      *
      * @return array
      */
-    public function getFields();
+    public static function getFields();
 
 
     /**
@@ -36,7 +36,7 @@ interface StorageModelInterface
      *
      * @return array
      */
-    public function getFieldTypes();
+    public static function getFieldTypes();
 
 
     /**
@@ -44,21 +44,21 @@ interface StorageModelInterface
      *
      * @return array
      */
-    public function getPublicFields();
+    public static function getPublicFields();
 
 
     /**
      * Return table / collection name for model
      * @return string
      */
-    public function getTableName();
+    public static function getTableName();
 
 
     /**
      * Return primary key
      * @return string
      */
-    public function getPrimaryKey();
+    public static function getPrimaryKey();
 
 
     /**
@@ -66,5 +66,5 @@ interface StorageModelInterface
      * @param array $condition
      * @return $this[]
      */
-    public function find(array $condition);
+    public static function find(array $condition);
 }

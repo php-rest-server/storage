@@ -197,9 +197,9 @@ abstract class StorageModel implements StorageModelInterface
     /**
      * @inheritdoc
      */
-    public function find(array $condition)
+    public static function find(array $condition)
     {
-        $records = $this->getStorageEngine()->find($condition, $this->getTableName());
+        $records = static::getStorageEngine()->find($condition, static::getTableName());
         if (empty($records)) {
             $records = [];
         }
