@@ -64,7 +64,7 @@ interface StorageModelInterface
     /**
      * Return list of models which satisfying the condition
      * @param array $condition
-     * @return $this[]
+     * @return static[]
      */
     public static function find(array $condition);
 }
