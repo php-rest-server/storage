@@ -59,4 +59,12 @@ interface StorageModelInterface
      * @return string
      */
     public function getPrimaryKey();
+
+
+    /**
+     * Return list of models which satisfying the condition
+     * @param array $condition
+     * @return $this[]
+     */
+    public function find(array $condition);
 }

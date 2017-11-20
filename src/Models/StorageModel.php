@@ -7,7 +7,6 @@ namespace RestCore\Storage\Models;
 
 use RestCore\Storage\Exceptions\ColumnNotFoundException;
 use RestCore\Storage\Exceptions\SchemaNotFoundException;
-use RestCore\Storage\Exceptions\StorageException;
 use RestCore\Storage\Interfaces\StorageModelInterface;
 
 abstract class StorageModel implements StorageModelInterface
@@ -190,6 +189,28 @@ abstract class StorageModel implements StorageModelInterface
         $result = [];
         foreach ($fields as $field) {
             $result[$field] = $this->$field;
+        }
+        return $result;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function find(array $condition)
+    {
+        $records = $this->getStorageEngine()->find($condition, $this->getTableName());
+        if (empty($records)) {
+            $records = [];
+        }
+        /**
+         * @var StorageModel[] $result
+         */
+        $result = [];
+        foreach ($records as $id => $data) {
+            $result[$id] = new static();
+            $result[$id]->load($data);
+            $result[$id]->isNew = false;
         }
         return $result;
     }
