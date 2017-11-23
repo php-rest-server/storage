@@ -155,7 +155,7 @@ class PostgresStorageEngine extends StorageEngine
             return true;
         }
 
-        $error = $statement->errorInfo();
+        $error = $this->connection->errorInfo();
         throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
@@ -251,7 +251,7 @@ class PostgresStorageEngine extends StorageEngine
             return true;
         }
 
-        $error = $statement->errorInfo();
+        $error = $this->connection->errorInfo();
         throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
@@ -271,7 +271,7 @@ class PostgresStorageEngine extends StorageEngine
             return true;
         }
 
-        $error = $statement->errorInfo();
+        $error = $this->connection->errorInfo();
         throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
