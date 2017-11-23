@@ -66,6 +66,9 @@ class PostgresStorageEngine extends StorageEngine
         if ($error[0] === '42P01') {
             throw new SchemaNotFoundException($error[0] . ': ' . $error[2]);
         }
+        if ($error[0] === '42703') {
+            throw new ColumnNotFoundException($error[0] . ': ' . $error[2]);
+        }
         throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
