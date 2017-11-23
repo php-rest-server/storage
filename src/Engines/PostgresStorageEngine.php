@@ -45,22 +45,37 @@ class PostgresStorageEngine extends StorageEngine
     /**
      * @inheritdoc
      */
-    public function find(array $params, $schema, $limit = 100)
+    public function find(array $fields, array $params, $schema, $limit = 100)
     {
+        if (empty($fields)) {
+            $fieldsSelect = '*';
+        } else {
+            $fieldsSelect = '"' . implode('", "', $fields) . '"';
+        }
+
         $statement = $this->connection->prepare(
-            'SELECT * FROM "' . $schema . '" WHERE ' . $this->composeWhere($params) . ' LIMIT ' . $limit . ';'
+            'SELECT ' . $fieldsSelect . ' FROM "' . $schema . '" ' .
+            (!empty($params) ? 'WHERE ' . $this->composeWhere($params) . ' ' : '') .
+            'LIMIT ' . $limit . ';'
         );
-        $statement->execute($params);
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if ($statement->execute($params)) {
+            return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        $error = $statement->errorInfo();
+        if ($error[0] === '42P01') {
+            throw new SchemaNotFoundException($error[0] . ': ' . $error[2]);
+        }
+        throw new StorageException($error[0] . ': ' . $error[2]);
     }
 
 
     /**
      * @inheritdoc
      */
-    public function findOne(array $params, $schema)
+    public function findOne(array $fields, array $params, $schema)
     {
-        $result = $this->find($params, $schema, 1);
+        $result = $this->find($fields, $params, $schema, 1);
         if (is_array($result) && !empty($result)) {
             return $result[0];
         }
@@ -70,7 +85,6 @@ class PostgresStorageEngine extends StorageEngine
 
     /**
      * @inheritdoc
-     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function add(array $data, $schema)
     {
@@ -97,7 +111,6 @@ class PostgresStorageEngine extends StorageEngine
 
     /**
      * @inheritdoc
-     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function createSchema($schema, array $fields)
     {
@@ -149,7 +162,6 @@ class PostgresStorageEngine extends StorageEngine
 
     /**
      * @inheritdoc
-     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function update(array $params, array $data, $schema, $limit = 100)
     {
@@ -180,18 +192,28 @@ class PostgresStorageEngine extends StorageEngine
      * @param array $params
      * @return string
      */
-    protected function composeWhere(array $params)
+    protected function composeWhere(array &$params)
     {
         // TODO: make smart where
-        array_walk($params, function (&$item, $key) {
-            $item = '"' . $key . '" = :' . $key;
+        $raw = $params;
+        array_walk($raw, function (&$item, $key) use (&$params) {
+            if (is_array($item)) {
+                switch ($item[1]) {
+                    case 'NOT':
+                        $params[$key] = $item[2];
+                        $item = '"' . $item[0] . '" != :' . $key;
+                        break;
+                }
+            } else {
+                $item = '"' . $key . '" = :' . $key;
+            }
         });
-        return implode(' AND ', $params);
+
+        return implode(' AND ', $raw);
     }
 
     /**
      * @inheritdoc
-     * @throws \RestCore\Storage\Exceptions\StorageException
      */
     public function createColumn($schema, $column, $type)
     {
@@ -231,5 +253,42 @@ class PostgresStorageEngine extends StorageEngine
 
         $error = $statement->errorInfo();
         throw new StorageException($error[0] . ': ' . $error[2]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function createIndex($schema, $name, $columns, $type)
+    {
+        if (empty($name)) {
+            $name = $schema . '_' . $type . '_' . implode('_', $columns);
+        }
+        $statement =
+            $this->connection->query('CREATE ' . ($type === StorageModelInterface::INDEX_TYPE_UNIQUE ? 'UNIQUE ' : '') .
+                'INDEX "' . $name . '" ON "' . $schema . '" ("' . implode('", "', $columns) . '");');
+
+        if ($statement) {
+            return true;
+        }
+
+        $error = $statement->errorInfo();
+        throw new StorageException($error[0] . ': ' . $error[2]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getIndexes($schema)
+    {
+        try {
+            $data = $this->find(
+                ['indexname'],
+                ['tablename' => $schema,],
+                'pg_indexes'
+            );
+            return array_column($data, 'indexname');
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }
