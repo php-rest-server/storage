@@ -1,6 +1,5 @@
 <?php
 /**
- * TODO: transactions
  */
 
 namespace RestCore\Storage\Engines;
