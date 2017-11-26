@@ -18,7 +18,7 @@ abstract class StorageEngine implements StorageEngineInterface
 
     public function __construct()
     {
-        $config = Storage::getConfig();
+        $config = Storage::getModuleConfig();
         $this->connect(isset($config[$this->getStorageName()]) ? $config[$this->getStorageName()] : [] );
     }
 
