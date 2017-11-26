@@ -294,4 +294,28 @@ class PostgresStorageEngine extends StorageEngine
             return [];
         }
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function transactionBegin()
+    {
+        $this->connection->exec('BEGIN;');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function transactionCommit()
+    {
+        $this->connection->exec('COMMIT;');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function transactionRollback()
+    {
+        $this->connection->exec('ROLLBACK;');
+    }
 }

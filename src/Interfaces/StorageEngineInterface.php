@@ -92,4 +92,22 @@ interface StorageEngineInterface
      * @return array ['index_name' => ['field1',...]
      */
     public function getIndexes($schema);
+
+
+    /**
+     * Start transaction
+     */
+    public function transactionBegin();
+
+
+    /**
+     * Commit transaction
+     */
+    public function transactionCommit();
+
+
+    /**
+     * Rollback transaction
+     */
+    public function transactionRollback();
 }
