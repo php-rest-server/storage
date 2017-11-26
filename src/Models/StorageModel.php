@@ -46,7 +46,7 @@ abstract class StorageModel implements StorageModelInterface
      */
     public function __construct(array $params = [])
     {
-        $this->develop = (new Param(Storage::getConfig()))->get('develop', false);
+        $this->develop = (new Param(Storage::getModuleConfig()))->get('develop', false);
 
         if ($this->develop) {
             static::developSchema();
@@ -194,7 +194,7 @@ abstract class StorageModel implements StorageModelInterface
      */
     public static function find(array $condition)
     {
-        if ((new Param(Storage::getConfig()))->get('develop', false)) {
+        if ((new Param(Storage::getModuleConfig()))->get('develop', false)) {
             static::developSchema();
         }
 
